@@ -1,0 +1,26 @@
+<core:FragmentDefinition
+	xmlns="sap.m"
+	xmlns:core="sap.ui.core">   
+	<SelectDialog
+	    id="idSelectDialogMove"
+	    confirmButtonText="Zatwierdź"
+		noDataText="Brak materiałów/partii do rozmieszczenia"
+		title="Wybór materiału/partii do rozmieszczenia"
+		multiSelect="true"
+		search="handleSearchMoveDialog"
+		confirm="handleCloseMoveDialog"
+		cancel="handleCancelMoveDialog"
+		growing="false"
+		items="{
+			path: 'toSB_MOVE_Items_OnVlpla'
+		}" >		
+		<StandardListItem
+			visible="true"
+            title="{Matnr}/{Charg} {Vlpla} {Status} "
+			selected="{= !!${Status} }"
+			description="{Maktx} {CutCl}"
+			info="{QuantitySt} {UnitofmeasureSt} "
+			type="Active"
+			wrapping="true" />
+	</SelectDialog>
+</core:FragmentDefinition>

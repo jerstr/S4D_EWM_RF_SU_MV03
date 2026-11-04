@@ -1,0 +1,202 @@
+<mvc:View
+	controllerName="ewm.s4m.S4D_EWM_RF_SB_MOVE03.S4D_EWM_RF_SU_MV03.controller.Worklist"
+	xmlns="sap.m"
+	xmlns:mvc="sap.ui.core.mvc"
+	xmlns:core="sap.ui.core"
+	xmlns:semantic="sap.f.semantic"
+	xmlns:footerbar="sap.ushell.ui.footerbar">
+
+	<semantic:SemanticPage
+		id="page"
+		class="sapUiNoContentPadding"
+		busy="{worklistView>/busy}" 
+		busyIndicatorDelay="{worklistView>/delay}" 
+		headerPinnable="false"
+		toggleHeaderOnTitleClick="false">
+		
+		<semantic:titleHeading>
+			<Title
+				text="{i18n>worklistTitle}"
+				level="H2"/>
+		</semantic:titleHeading>
+		<semantic:headerContent >
+			<VBox direction="Column">
+				<items>			
+					<HBox displayInline="false" justifyContent="Start" alignItems="Start" direction="Row" visible="true" class="sapUiTinyMarginBegin">
+						<items>
+							<Label  text="Źródłowe MS lub Kod kreskowy/QR" class="sapUiTinyMarginEndt"/>
+							<!-- <Input id="idVlpla" enabled="{= !!!${Vlpla} }"
+								value="{ path: 'Vlpla', type: 'sap.ui.model.type.String' }" 
+								submit="onVlpla" class="sapUiTinyMarginEnd"/> -->
+							<Input id="idVlpla" enabled="{= ( !!!${Vlpla} || ${worklistView>/scanMode} === 'M' ) &amp;&amp; !!!${Approved} }"
+								value="{worklistView>/sourceInput}"
+								autocomplete="false"
+								submit="onVlpla" class="sapUiTinyMarginEnd"/>
+							<Button id="stock-reset" text="Reset" type="Emphasized" press="OnReset"/>
+							<Text  id="idUi5Guid" text="{Ui5Guid}" visible="false" class="sapUiTinyMarginEnd"/>
+						</items>
+					</HBox>
+					<HBox displayInline="false" justifyContent="Start" alignItems="Center" direction="Row" visible="{= ${worklistView>/scanMode} === 'M' &amp;&amp; !!${Vlpla} }" class="sapUiTinyMarginBegin sapUiTinyMarginBottom">
+						<items>
+							<Label  text="Źródłowe MS:" class="sapUiTinyMarginEnd"/>
+							<ObjectStatus text="{Vlpla}" state="Information" inverted="true"/>
+						</items>
+					</HBox>
+					<HBox displayInline="false" justifyContent="Start" alignItems="Start" direction="Row" visible="{= !!${Vlpla} &amp;&amp; !!!${Approved} &amp;&amp; !${worklistView>/selectionEnabled} &amp;&amp; ${worklistView>/scanMode} !== 'M' }" class="sapUiTinyMarginBegin">
+						<items>
+							<Label  text="Kod kreskowy/QR" class="sapUiTinyMarginEnd"/>
+							<Input id="idScanMatBatch" enabled="{= !!${Vlpla} &amp;&amp; !!!${Approved} &amp;&amp; !${worklistView>/selectionEnabled} &amp;&amp; ${worklistView>/scanMode} !== 'M' }"
+								value="{ path: 'ScanMatBatch', type: 'sap.ui.model.type.String' }" submit="onScanMatBatch" class="sapUiTinyMarginEnd"/>
+							<!--<Button id="stock-show" enabled="{= ${worklistView>/lineExist} &amp;&amp; !!!${Approved} }" text="Zapas" type="Emphasized" press="onShowStock"/>						-->
+						</items>
+					</HBox>	
+					<HBox displayInline="false" justifyContent="SpaceBetween" alignItems="Start" direction="Row" visible="true" class="sapUiTinyMarginBegin">
+						<items>
+							<Button id="move-button" text="Um.w mag." enabled="{= ${worklistView>/lineExist} &amp;&amp; !!!${Approved} &amp;&amp; !${worklistView>/hasQtyError} }" type="Emphasized" press="onMove" class="sapUiTinyMarginEnd"/>	
+							<Button id="move2-button" text="Um.w Aut." enabled="{= ${worklistView>/lineExist} &amp;&amp; !!!${Approved} &amp;&amp; !${worklistView>/hasQtyError} }" type="Emphasized" press="onMoveAuto" class="sapUiTinyMarginEnd"/>	
+							<Button id="move3-button" text="Przen.na M" enabled="{= ${worklistView>/lineExist} &amp;&amp; !!!${Approved} &amp;&amp; !${worklistView>/hasQtyError} }" type="Emphasized" press="onMoveM" class="sapUiTinyMarginEnd"/>	
+							<Button text="Zapas" press="onBatchStock" type="Emphasized" class="sapUiTinyMarginBegin" />
+						</items>
+					</HBox>		
+					<HBox displayInline="false" justifyContent="Start" alignItems="Start" direction="Row" visible="true" class="sapUiTinyMarginBegin">
+						<items>
+							<Label  text="Docelowe MS" class="sapUiTinyMarginEndt"/>
+							<Input id="idNlpla" enabled="{= !!${Approved} &amp;&amp; !${worklistView>/hasQtyError} }" 
+								value="{ path: 'Nlpla', type: 'sap.ui.model.type.String' }" submit="onNlpla($event,'')" class="sapUiTinyMarginEnd"/>
+							<Text  id="idApproved" text="{Approved}" visible="false" class="sapUiTinyMarginEnd"/>
+						</items>					
+					</HBox>
+				</items>
+			</VBox>
+		</semantic:headerContent>
+		<semantic:content>
+			<Table
+				id="table"
+				width="auto"
+				items="{
+					path: 'toSB_MOVE_Items'
+				}"
+				mode="Delete"
+				delete="onTableDelete"
+				swipe="handleSwipe"
+				noDataText="{worklistView>/tableNoDataText}"
+				busyIndicatorDelay="{worklistView>/tableBusyDelay}"
+				growing="false"
+				growingScrollToLoad="false"
+				updateFinished=".onUpdateFinished">
+
+				<headerToolbar>
+					<OverflowToolbar>
+						<Title
+							id="tableHeader"
+							text="{worklistView>/worklistTableTitle}"
+							level="H3"/>
+						<ToolbarSpacer />
+						<!--<SearchField-->
+						<!--	id="searchField"-->
+						<!--	tooltip="{i18n>worklistSearchTooltip}"-->
+						<!--	search=".onSearch">-->
+						<!--	<layoutData>-->
+						<!--		<OverflowToolbarLayoutData-->
+						<!--			maxWidth="200px"-->
+						<!--			priority="NeverOverflow"/>-->
+						<!--	</layoutData>-->
+						<!--</SearchField>-->
+					</OverflowToolbar>
+				</headerToolbar>
+
+				<columns>
+					<Column id="check" visible="{= ${worklistView>/selectionEnabled} &amp;&amp; !${worklistView>/hasHuItems} }">
+						<Text text="Wybór" id="Sel"/>
+					</Column>
+					<Column id="nameColumn">
+						<Text text="{i18n>tableNameColumnTitle}" id="nameColumnTitle"/>
+					</Column>
+					<Column width="auto" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline">
+						<Text text="Opis  Ilość JM" id="unitNumberColumnTitle"/>
+					</Column>
+					<Column width="auto" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" visible="{= ${worklistView>/selectionEnabled} &amp;&amp; !${worklistView>/hasHuItems} }">
+						<Text text="Ilość"/>
+					</Column>					
+					<Column width="auto"  minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline">
+						<Text text="Status"/>
+					</Column>					
+					<Column width="auto" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" visible="{= ${worklistView>/selectionEnabled} &amp;&amp; !${worklistView>/hasHuItems} &amp;&amp; ${worklistView>/hasClientColumn} }">
+						<Text text="Klient"/>
+					</Column>					
+					<Column width="auto" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" visible="{= ${worklistView>/selectionEnabled} &amp;&amp; !${worklistView>/hasHuItems} &amp;&amp; ${worklistView>/hasSchemeColumn} }">
+						<Text text="Schemat Długość[mm]"/>
+					</Column>					
+				</columns>
+
+				<items>
+					<ColumnListItem
+						type="Inactive"
+						press=".onPress">
+						<cells>
+						    <CheckBox selected="{Marked}" visible="{= ${worklistView>/selectionEnabled} &amp;&amp; !${worklistView>/hasHuItems} &amp;&amp; ${Status} !== 'R' }" select="onCheckBoxSelected"/>
+							<VBox>
+								<items>
+									<Text text="{= !!${HuidentSt} ? ${Matnr} + '/' +  ${HuidentSt} : ${Matnr} + '/' + ${Charg} }" class="sapUiTinyMarginBottom"/>
+									<ObjectStatus text="{Vlpla}" state="Information" inverted="true"/>
+								</items>
+							</VBox>
+							<!--<Text text="{Matnr}/{Charg} {Vlpla}"/>-->
+							<Text text="{
+							parts: [
+								{path: 'Maktx'},
+								{path: 'QuantitySt'},
+								{path: 'UnitofmeasureSt'},
+								{path: 'PceUmrez'},
+								{path: 'PceUmren'}
+							],
+							formatter: '.formatter.formatItemDescription'
+						}"/>
+							<HBox alignItems="Center" visible="{= ${worklistView>/selectionEnabled} &amp;&amp; !${worklistView>/hasHuItems} }">
+								<items>
+									<Input id="qty" enabled="{= ${worklistView>/selectionEnabled} &amp;&amp; !${worklistView>/hasHuItems} &amp;&amp; ${Status} !== 'R' &amp;&amp; ${Marked} &amp;&amp; ${CatSt} !== 'F2' }"
+										autocomplete="false"
+										valueLiveUpdate="true"
+										value="{QtyByUser}" submit="onQtyliveChange" change="onQtyliveChange" class="sapUiTinyMarginEnd"/>
+									<Text text="{UnitofmeasureSt}" class="sapUiTinyMarginEnd"/>
+									<Text text="{
+										parts: [
+											{path: 'QtyByUser'},
+											{path: 'UnitofmeasureSt'},
+											{path: 'PceUmrez'},
+											{path: 'PceUmren'}
+										],
+										formatter: '.formatter.formatQtyByUserInPieces'
+									}"/>
+								</items>
+							</HBox>
+							<HBox alignItems="Center">
+								<items>
+									<core:Icon src="{StatusIcon}" color="{StatusIconColor}"/>
+									<core:Icon src="{PackIcon}" visible="{= !!${PackIcon} }" class="sapUiTinyMarginBegin"/>
+									<ObjectStatus text="{CatSt}" state="Warning" visible="{= ${CatSt} === 'F2' }" class="sapUiTinyMarginBegin"/>
+								</items>
+							</HBox>
+						<Text text="{DestLocDescAddr}" visible="{= !!${DestLocDescAddr} }"/>							
+						<Text text="{CutScheme} {CutCl}" visible="{= !!${CutScheme} || !!${CutCl} }"/>							
+						</cells>
+					</ColumnListItem>
+				</items>
+			</Table>
+		</semantic:content>
+
+		<!--<semantic:sendEmailAction>-->
+		<!--	<semantic:SendEmailAction id="shareEmail" press=".onShareEmailPress"/>-->
+		<!--</semantic:sendEmailAction>-->
+
+		<!--<semantic:shareInJamAction>-->
+		<!--	<semantic:ShareInJamAction id="shareInJam" visible="{FLP>/isShareInJamActive}" press=".onShareInJamPress"/>-->
+		<!--</semantic:shareInJamAction>-->
+
+		<!--<semantic:saveAsTileAction>-->
+		<!--	<footerbar:AddBookmarkButton id ="shareTile" title="{worklistView>/saveAsTileTitle}" />-->
+		<!--</semantic:saveAsTileAction>-->
+
+	</semantic:SemanticPage>
+
+</mvc:View>

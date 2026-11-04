@@ -1,0 +1,11 @@
+<mvc:View
+	controllerName="ewm.s4m.S4D_EWM_RF_SB_MOVE03.S4D_EWM_RF_SU_MV03.controller.App"
+	displayBlock="true"
+	xmlns="sap.m"
+	xmlns:mvc="sap.ui.core.mvc">
+	<App
+		id="app"
+		busy="{appView>/busy}"
+		busyIndicatorDelay="{appView>/delay}"/>
+
+</mvc:View>

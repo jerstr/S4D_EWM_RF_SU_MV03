@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=https://sap.github.io/ui5-tooling/schema/ui5.yaml.json
+
+specVersion: "2.4"
+metadata:
+  name: ewm.s4m.s4d_ewm_rf_sb_move03.s4d_ewm_rf_su_mv03
+type: application
+builder:
+  resources:
+    excludes:
+      - /test/**
+      - /localService/**
+  customTasks:
+    - name: deploy-to-abap
+      afterTask: generateCachebusterInfo
+      configuration:
+        target:
+          destination: S4D_010
+          url: http://app-dev.moris.pl:44305
+        app:
+          name: Z075EWM_RF_MV03
+          description: Z075EWM_RF_MV03 - Uporządkuj RF
+          package: Z075EWM_SR_UI
+          transport: DO_UZUPELNIENIA
+        exclude:
+          - /test/

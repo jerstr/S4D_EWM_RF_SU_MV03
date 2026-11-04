@@ -1,0 +1,160 @@
+{
+  "configurations": [
+    {
+      "name": "Start S4D_EWM_RF_SU_MV03",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "cwd": "${workspaceFolder}",
+      "runtimeArgs": [
+        "fiori",
+        "run"
+      ],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "port": 9229,
+      "env": {
+        "DEBUG": "--inspect",
+        "run.config": "{\"handlerId\":\"fiori_tools\",\"runnableId\":\"/home/user/projects/S4D_EWM_RF_SU_MV03\"}",
+        "FIORI_TOOLS_BACKEND_CONFIG": "[{\"path\":\"/sap\",\"destination\":\"S4D_100\"}]"
+      },
+      "args": [
+        "--open",
+        "test/flpSandbox.html?sap-client=020#app-tile"
+      ]
+    },
+    {
+      "name": "Start S4D_EWM_RF_SU_MV03 Mock",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "npm",
+      "windows": {
+        "runtimeExecutable": "npm.cmd"
+      },
+      "runtimeArgs": [
+        "run-script",
+        "start-mock"
+      ],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "port": 9229,
+      "env": {
+        "run.config": "{\"handlerId\":\"fiori_tools\",\"runnableId\":\"/home/user/projects/S4D_EWM_RF_SU_MV03\"}"
+      }
+    },
+    {
+      "name": "Start S4D_EWM_RF_SU_MV03 Local",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "npm",
+      "windows": {
+        "runtimeExecutable": "npm.cmd"
+      },
+      "runtimeArgs": [
+        "run-script",
+        "start-local"
+      ],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "port": 9229,
+      "env": {
+        "run.config": "{\"handlerId\":\"fiori_tools\",\"runnableId\":\"/home/user/projects/S4D_EWM_RF_SU_MV03\"}"
+      }
+    },
+    {
+      "name": "Start S4D_EWM_RF_GI01",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "cwd": "${workspaceFolder}/S4D_EWM_RF_GI01",
+      "windows": {
+        "runtimeExecutable": "npm.cmd"
+      },
+      "runtimeArgs": [
+        "run-script",
+        "start"
+      ],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "port": 9229,
+      "env": {
+        "DEBUG": "--inspect",
+        "run.config": "{\"handlerId\":\"fiori_tools\",\"runnableId\":\"/home/user/projects/S4D_EWM_RF_SU_MV03/S4D_EWM_RF_GI01\"}"
+      }
+    },
+    {
+      "name": "Start S4D_EWM_RF_GI01 Mock",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/S4D_EWM_RF_GI01",
+      "runtimeExecutable": "npm",
+      "windows": {
+        "runtimeExecutable": "npm.cmd"
+      },
+      "runtimeArgs": [
+        "run-script",
+        "start-mock"
+      ],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "port": 9229,
+      "env": {
+        "run.config": "{\"handlerId\":\"fiori_tools\",\"runnableId\":\"/home/user/projects/S4D_EWM_RF_SU_MV03/S4D_EWM_RF_GI01\"}"
+      }
+    },
+    {
+      "name": "Start S4D_EWM_RF_GI01 Local",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/S4D_EWM_RF_GI01",
+      "runtimeExecutable": "npm",
+      "windows": {
+        "runtimeExecutable": "npm.cmd"
+      },
+      "runtimeArgs": [
+        "run-script",
+        "start-local"
+      ],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "port": 9229,
+      "env": {
+        "run.config": "{\"handlerId\":\"fiori_tools\",\"runnableId\":\"/home/user/projects/S4D_EWM_RF_SU_MV03/S4D_EWM_RF_GI01\"}"
+      }
+    },
+    {
+      "name": "S4D_EWM_RF_SU_MV03-config1",
+      "cwd": "${workspaceFolder}",
+      "runtimeArgs": [
+        "fiori",
+        "run"
+      ],
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "args": [
+        "--open",
+        "test/flpSandbox.html"
+      ],
+      "console": "internalConsole",
+      "internalConsoleOptions": "openOnSessionStart",
+      "outputCapture": "std",
+      "env": {
+        "run.config": "{\"handlerId\":\"fiori_tools\",\"runnableId\":\"/home/user/projects/S4D_EWM_RF_SU_MV03\"}",
+        "FIORI_TOOLS_BACKEND_CONFIG": "[{\"destination\":\"S4D_100\",\"path\":\"/sap\"}]",
+        "FIORI_TOOLS_URL_PARAMS": "sap-ui-xx-viewCache=false"
+      }
+    }
+  ],
+  "compounds": [],
+  "version": "0.2.0",
+  "inputs": [
+    {
+      "id": "UI5Version",
+      "type": "command",
+      "command": "sap.ux.appGenerator.ui5Version"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+specVersion: "2.4"
+metadata:
+  name: ewm.s4m.s4d_ewm_rf_sb_move03.s4d_ewm_rf_su_mv03
+type: application
+framework:
+  name: SAPUI5
+  version: 1.92.2
+  libraries:
+    - name: sap.f
+    - name: sap.m
+    - name: sap.suite.ui.microchart
+    - name: sap.ui.comp
+    - name: sap.ui.core
+    - name: sap.ui.layout
+    - name: sap.ui.generic.app
+    - name: sap.ui.table
+    - name: sap.ushell
+    - name: themelib_sap_fiori_3
+server:
+  customMiddleware:
+    - name: fiori-tools-proxy
+      afterMiddleware: compression
+      configuration:
+        ignoreCertError: false
+        backend:
+          - path: /sap
+            url: ""
+            client: "100"
+            destination: S4D_100
+    - name: fiori-tools-appreload
+      afterMiddleware: compression
+      configuration:
+        port: 35729
+        path: webapp
