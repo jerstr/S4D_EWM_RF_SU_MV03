@@ -49,7 +49,7 @@ RF Przyjęcia (pakiet Z075EWM_SR_UI, S4DK929802): pola `Level` i `TidyPlan` w `Z
 
 ## UI (ten projekt)
 
-- `Worklist.view.xml`: panel porządkowania (`TidyActive`), jedno pole skanowania, ukryte Um.w mag./Um.w Aut./Przen.na M i pole „Docelowe MS” w trybie porządkowania, przycisk „Przerwij”. Mały ekran (Zebra): w pasku tylko licznik „n/m gotowe” i „Przerwij”, opis planu (`TidyText`: MS, auto, indeks) w osobnej zawijanej linii, nagłówek listy „Do zrobienia” (MS jest niżej przy „Porządkowane MS”).
+- `Worklist.view.xml`: panel porządkowania (`TidyActive`), jedno pole skanowania, ukryte Um.w mag./Um.w Aut./Przen.na M i pole „Docelowe MS” w trybie porządkowania, przycisk „Przerwij”. Mały ekran (Zebra): w pasku tylko licznik „n/m gotowe” i „Przerwij”, opis planu (`TidyText`: MS, auto, indeks) w osobnej zawijanej linii, nagłówek listy „Do zrobienia” (MS jest niżej przy „Porządkowane MS”). Przycisk „Zapas” (podgląd zapasu, tylko pomoc) w trybie porządkowania jest ikoną magazynu w pasku obok „Przerwij”; tytuł tabeli pozycji i wiersz nagłówków kolumn są w tym trybie ukryte (tabela UI5 nie renderuje nagłówka, gdy wszystkie nagłówki kolumn są niewidoczne).
 - `Worklist.controller.js`: `_getTidyStartupParams`, `_startTidy`, `_onTidyResponse` (E/W/I, `TidyFinished`), `_tidyForceMove`, `onTidyCancel`, `_backToReceipt`; `onVlpla` i `onUpdateFinished` z gałęzią trybu porządkowania.
 - `localService/metadata.xml` nie odświeżony (potrzebny dostęp HTTP do S4D) – pobrać z `$metadata` usługi przy najbliższej pracy w BAS.
 - Launchpad: intent `ZS4MORIS_EWM_COCKPIT-RF_MOVE03` istnieje; w target mapping muszą być dozwolone dodatkowe parametry (`TorId`, `Productno`, `Vlpla`, `TidyPlan`).

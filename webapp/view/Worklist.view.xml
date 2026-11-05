@@ -29,7 +29,13 @@
 								<items>
 									<!-- mały ekran (Zebra): krótki licznik w pasku, opis planu w osobnej zawijanej linii -->
 									<ObjectStatus text="{= ${TidyDone} + '/' + (${TidyDone} + ${TidyOpen}) + ' gotowe' }" state="Information" inverted="true" icon="sap-icon://move" class="sapUiTinyMarginEnd"/>
-									<Button id="tidy-cancel" text="Przerwij" type="Reject" icon="sap-icon://decline" press="onTidyCancel" enabled="{= !${TidyFinished} }"/>
+									<HBox alignItems="Center">
+										<items>
+											<!-- podgląd zapasu to tylko pomoc: ikona w pasku zamiast przycisku pod polem skanowania -->
+											<Button id="tidy-stock" icon="sap-icon://warehouse" tooltip="Zapas" press="onBatchStock" class="sapUiTinyMarginEnd"/>
+											<Button id="tidy-cancel" text="Przerwij" type="Reject" icon="sap-icon://decline" press="onTidyCancel" enabled="{= !${TidyFinished} }"/>
+										</items>
+									</HBox>
 								</items>
 							</HBox>
 							<Text text="{TidyText}" wrapping="true" class="sapUiTinyMarginTop"/>
@@ -89,7 +95,7 @@
 							<!--<Button id="stock-show" enabled="{= ${worklistView>/lineExist} &amp;&amp; !!!${Approved} }" text="Zapas" type="Emphasized" press="onShowStock"/>						-->
 						</items>
 					</HBox>
-					<HBox displayInline="false" justifyContent="SpaceBetween" alignItems="Start" direction="Row" visible="true" class="sapUiTinyMarginBegin">
+					<HBox displayInline="false" justifyContent="SpaceBetween" alignItems="Start" direction="Row" visible="{= !${TidyActive} }" class="sapUiTinyMarginBegin">
 						<items>
 							<Button id="move-button" text="Um.w mag." visible="{= !${TidyActive} }" enabled="{= ${worklistView>/lineExist} &amp;&amp; !!!${Approved} &amp;&amp; !${worklistView>/hasQtyError} }" type="Emphasized" press="onMove" class="sapUiTinyMarginEnd"/>
 							<Button id="move2-button" text="Um.w Aut." visible="{= !${TidyActive} }" enabled="{= ${worklistView>/lineExist} &amp;&amp; !!!${Approved} &amp;&amp; !${worklistView>/hasQtyError} }" type="Emphasized" press="onMoveAuto" class="sapUiTinyMarginEnd"/>
@@ -125,7 +131,8 @@
 				updateFinished=".onUpdateFinished">
 
 				<headerToolbar>
-					<OverflowToolbar>
+					<!-- tryb porządkowania (mały ekran): bez tytułu tabeli i nagłówków kolumn - pozycje mówią same za siebie -->
+					<OverflowToolbar visible="{= !${TidyActive} }">
 						<Title
 							id="tableHeader"
 							text="{worklistView>/worklistTableTitle}"
@@ -146,25 +153,25 @@
 
 				<columns>
 					<Column id="check" visible="{= ${worklistView>/selectionEnabled} &amp;&amp; !${worklistView>/hasHuItems} }">
-						<Text text="Wybór" id="Sel"/>
+						<Text text="Wybór" id="Sel" visible="{= !${TidyActive} }"/>
 					</Column>
 					<Column id="nameColumn">
-						<Text text="{i18n>tableNameColumnTitle}" id="nameColumnTitle"/>
+						<Text text="{i18n>tableNameColumnTitle}" id="nameColumnTitle" visible="{= !${TidyActive} }"/>
 					</Column>
 					<Column width="auto" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline">
-						<Text text="Opis  Ilość JM" id="unitNumberColumnTitle"/>
+						<Text text="Opis  Ilość JM" id="unitNumberColumnTitle" visible="{= !${TidyActive} }"/>
 					</Column>
 					<Column width="auto" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" visible="{= ${worklistView>/selectionEnabled} &amp;&amp; !${worklistView>/hasHuItems} }">
-						<Text text="Ilość"/>
+						<Text text="Ilość" visible="{= !${TidyActive} }"/>
 					</Column>
 					<Column width="auto"  minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline">
-						<Text text="Status"/>
+						<Text text="Status" visible="{= !${TidyActive} }"/>
 					</Column>
 					<Column width="auto" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" visible="{= ${worklistView>/selectionEnabled} &amp;&amp; !${worklistView>/hasHuItems} &amp;&amp; ${worklistView>/hasClientColumn} }">
-						<Text text="Klient"/>
+						<Text text="Klient" visible="{= !${TidyActive} }"/>
 					</Column>
 					<Column width="auto" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" visible="{= ${worklistView>/selectionEnabled} &amp;&amp; !${worklistView>/hasHuItems} &amp;&amp; ${worklistView>/hasSchemeColumn} }">
-						<Text text="Schemat Długość[mm]"/>
+						<Text text="Schemat Długość[mm]" visible="{= !${TidyActive} }"/>
 					</Column>
 				</columns>
 
