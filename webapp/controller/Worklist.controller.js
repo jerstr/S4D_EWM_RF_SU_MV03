@@ -426,7 +426,7 @@ sap.ui.define([
                     Ui5Guid: data.Ui5Guid,
                     Vlpla: data.Vlpla,
                     ScanMatBatch: data.ScanMatBatch,
-                    mode: "",
+                    MoveMode: "",
                     qtyPCE: ""
                 },
                 success: function (oData, response) {
@@ -464,7 +464,7 @@ sap.ui.define([
                     Ui5Guid: data.Ui5Guid,
                     Vlpla: data.Vlpla,
                     ScanMatBatch: sScan,
-                    mode: "",
+                    MoveMode: "",
                     qtyPCE: ""
                 },
                 success: function (oData, response) {
@@ -759,7 +759,7 @@ sap.ui.define([
                     Ui5Guid: gData.Ui5Guid,
                     Vlpla: gData.Vlpla,
                     ScanMatBatch: gData.ScanMatBatch,
-                    mode: "M",
+                    MoveMode: "M",
                     qtyPCE: pQtyPCE
                 },
                 success: function (oData, response) {

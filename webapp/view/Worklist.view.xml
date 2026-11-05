@@ -74,7 +74,7 @@
 				id="table"
 				width="auto"
 				items="{
-					path: 'toSB_MOVE_Items'
+					path: 'to_SB_MOVE_Items'
 				}"
 				mode="Delete"
 				delete="onTableDelete"

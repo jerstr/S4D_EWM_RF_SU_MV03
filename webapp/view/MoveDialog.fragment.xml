@@ -12,7 +12,7 @@
 		cancel="handleCancelMoveDialog"
 		growing="false"
 		items="{
-			path: 'toSB_MOVE_Items_OnVlpla'
+			path: 'to_SB_MOVE_Items_OnVlpla'
 		}" >		
 		<StandardListItem
 			visible="true"

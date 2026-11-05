@@ -12,9 +12,10 @@ Tożsamość aplikacji:
 |---|---|---|
 | Namespace | `ewm.s4m.S4D_EWM_RF_SB_MOVE03.S4D_EWM_RF_SU_MV03` | `…MOVE01.…MV01` |
 | BSP | `Z075EWM_RF_MV03`, pakiet `Z075EWM_SR_UI` | `Z075EWM_RF_MV01` |
-| Transport | `DO_UZUPELNIENIA` w `ui5-deploy.yaml`, celowo, żeby deploy nie poszedł bez nowego transportu | – |
+| Transport | `S4DK929808` (UI i backend RAP) | – |
+| Deploy | destination `S4D_100`, klient `100` (`S4D_010` zwraca w BAS 401) | `S4D_010` |
 | Intent (sandbox) | `Uporzadkuj-display` | `Przesuniecia-display` |
-| Usługa OData | na razie `Z075EWM_SR_ODATA01_SRV` (jak MV01); docelowo **nowa usługa CDS/RAP tylko dla MV03** | `Z075EWM_SR_ODATA01_SRV` |
+| Usługa OData | **`ZUI_S4M_EWM_MV03_O2`** (RAP, OData V2, od 05.11.2026) | `Z075EWM_SR_ODATA01_SRV` |
 
 ## Twarde zasady
 
@@ -25,6 +26,11 @@ Tożsamość aplikacji:
 
 ## Dokumenty
 
+- **[docs/MV03-przepiecie-UI-na-RAP.md](docs/MV03-przepiecie-UI-na-RAP.md)** – opis nowej usługi RAP `ZUI_S4M_EWM_MV03_O2`. Zawiera:
+  - różnice względem MV01: nawigacje `to_SB_MOVE_Items` i `to_SB_MOVE_Items_OnVlpla`, parametr `MoveMode` zamiast `mode`;
+  - zachowanie usługi: tabele sesji `ZS4M_EWM_MV03_H` i `ZS4M_EWM_MV03_I`;
+  - testy backendu;
+  - co przepięto w UI.
 - **[docs/odata-MV01-kontekst-pod-RAP-MV03.md](docs/odata-MV01-kontekst-pod-RAP-MV03.md)** – pełny kontrakt OData używany przez MV01. Zawiera:
   - encje i pola, z oznaczeniem, które UI czyta i zapisuje;
   - przebieg sesji i wywołania `SB_MOVE_*`;
@@ -47,17 +53,18 @@ Tożsamość aplikacji:
   
   Backend od zawsze przywraca pełną ilość, gdy wpisana przekracza zapas. Dlatego walidacja jest w UI.
 - **Kolumny „Klient” i „Schemat”** są ukryte, gdy żadna pozycja nie ma danych.
-- **Lokalny `webapp/localService/metadata.xml` jest nieaktualny**, ma stan z 2024. Najnowsza lokalna kopia `$metadata` usługi: `/home/user/projects/zs4m_user_list05/webapp/localService/mainService/metadata.xml` (07.2026). Też nie zawiera pól `SelectionEnabled`, `CatSt`, `PackIcon`, `PceUmrez`, `PceUmren`, `RangeFlag`.
+- **`webapp/localService/metadata.xml`** = `$metadata` usługi `ZUI_S4M_EWM_MV03_O2` pobrane 05.11.2026 z S4D/100. Odświeżanie: `curl "http://S4D_100.dest/sap/opu/odata/sap/ZUI_S4M_EWM_MV03_O2/\$metadata?sap-client=100"`. W BAS destinations są dostępne jako `http://<nazwa>.dest`.
 
 ## Otwarte sprawy
 
 1. URL nowego repo GitHub: dodać remote i zrobić push.
-2. Transport dla `Z075EWM_RF_MV03`, potem kafelek i target mapping w FLP.
-3. Struktura tabeli strategii w S4 oraz projekt usługi CDS/RAP. Decyzje są w dokumencie OData: V2 czy V4, sposób przekazywania komunikatów, managed czy unmanaged.
-4. Przepływ „Uporządkuj”: lista zadań, potwierdzenie MS źródłowego, skan partii, ilość, MS docelowe. Do wycięcia prawdopodobnie Um.w Aut., Przen.na M, okno wyboru pozycji i logika N04/M06, do potwierdzenia.
+2. Kafelek i target mapping w FLP dla `Z075EWM_RF_MV03`.
+3. Test w UI na S4D wywołań księgujących (`SB_MOVE_to_nlpla`: MS docelowe, `AUTOMAT`, `MOVE_M`), bo backend ich nie testował automatycznie.
+4. Struktura tabeli strategii w S4 i jej rozszerzenie w usłudze RAP.
+5. Przepływ „Uporządkuj”: lista zadań, potwierdzenie MS źródłowego, skan partii, ilość, MS docelowe. Do wycięcia prawdopodobnie Um.w Aut., Przen.na M, okno wyboru pozycji i logika N04/M06, do potwierdzenia.
 
 ## Uruchamianie
 
 - `npm start` – FLP sandbox, backend przez destination `S4D_100`.
-- `npm run start-mock` – mockserver; metadata nieaktualne.
-- `npm run deploy` – dopiero po uzupełnieniu transportu w `ui5-deploy.yaml`.
+- `npm run start-mock` – mockserver na metadata nowej usługi.
+- Deploy: `npm run build`, potem `npx fiori deploy --config ui5-deploy.yaml -y` (`npm run deploy` pyta interaktywnie o potwierdzenie).
