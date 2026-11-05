@@ -9,11 +9,11 @@
 	<semantic:SemanticPage
 		id="page"
 		class="sapUiNoContentPadding"
-		busy="{worklistView>/busy}" 
-		busyIndicatorDelay="{worklistView>/delay}" 
+		busy="{worklistView>/busy}"
+		busyIndicatorDelay="{worklistView>/delay}"
 		headerPinnable="false"
 		toggleHeaderOnTitleClick="false">
-		
+
 		<semantic:titleHeading>
 			<Title
 				text="{i18n>worklistTitle}"
@@ -21,14 +21,49 @@
 		</semantic:titleHeading>
 		<semantic:headerContent >
 			<VBox direction="Column">
-				<items>			
+				<items>
+					<!-- Porządkowanie MS (etap 2): plan z RF Przyjęcia - co wyjąć z MS i dokąd; jedno pole skanowania poniżej -->
+					<VBox visible="{TidyActive}" class="sapUiTinyMarginBegin sapUiTinyMarginBottom">
+						<items>
+							<HBox alignItems="Center" justifyContent="SpaceBetween" wrap="Wrap">
+								<items>
+									<ObjectStatus text="{TidyText}" state="Information" inverted="true" icon="sap-icon://move" class="sapUiTinyMarginEnd"/>
+									<Button id="tidy-cancel" text="Przerwij" type="Reject" icon="sap-icon://decline" press="onTidyCancel" enabled="{= !${TidyFinished} }"/>
+								</items>
+							</HBox>
+							<List id="tidyList" items="{to_SB_MOVE_Tidy}" headerText="{= 'Do zrobienia - wyjąć z MS ' + ${Vlpla} }" class="sapUiTinyMarginTop">
+								<items>
+									<CustomListItem type="Inactive" highlight="{= ${IsCurrent} ? 'Information' : 'None' }">
+										<HBox alignItems="Center" justifyContent="SpaceBetween" class="sapUiTinyMargin">
+											<items>
+												<VBox>
+													<items>
+														<Text text="{Matnr} {Maktx}" class="sapUiTinyMarginBottom"/>
+														<HBox alignItems="Center">
+															<items>
+																<Text text="{= ${QtyRemaining} + ' ' + ${Uom} + ' (' + ${BatchesRemaining} + ' part.)' }" class="sapUiTinyMarginEnd"/>
+																<core:Icon src="sap-icon://arrow-right" class="sapUiTinyMarginEnd"/>
+																<ObjectStatus text="{= ${ActualLgpla} ? ${ActualLgpla} + ' (plan ' + ${TargetLgpla} + ')' : ${TargetLgpla} }" state="Success" inverted="true"/>
+															</items>
+														</HBox>
+														<Text text="{BlockedText}" visible="{= !!${BlockedText} }"/>
+													</items>
+												</VBox>
+												<core:Icon src="{StatusIcon}" color="{StatusIconColor}" tooltip="{StatusText}" size="1.5rem" class="sapUiTinyMarginBegin"/>
+											</items>
+										</HBox>
+									</CustomListItem>
+								</items>
+							</List>
+						</items>
+					</VBox>
 					<HBox displayInline="false" justifyContent="Start" alignItems="Start" direction="Row" visible="true" class="sapUiTinyMarginBegin">
 						<items>
-							<Label  text="Źródłowe MS lub Kod kreskowy/QR" class="sapUiTinyMarginEndt"/>
+							<Label  text="{= ${TidyActive} ? 'Skanuj partię z MS lub MS docelowe' : 'Źródłowe MS lub Kod kreskowy/QR' }" class="sapUiTinyMarginEndt"/>
 							<!-- <Input id="idVlpla" enabled="{= !!!${Vlpla} }"
-								value="{ path: 'Vlpla', type: 'sap.ui.model.type.String' }" 
+								value="{ path: 'Vlpla', type: 'sap.ui.model.type.String' }"
 								submit="onVlpla" class="sapUiTinyMarginEnd"/> -->
-							<Input id="idVlpla" enabled="{= ( !!!${Vlpla} || ${worklistView>/scanMode} === 'M' ) &amp;&amp; !!!${Approved} }"
+							<Input id="idVlpla" enabled="{= ${TidyActive} ? !${TidyFinished} : ( ( !!!${Vlpla} || ${worklistView>/scanMode} === 'M' ) &amp;&amp; !!!${Approved} ) }"
 								value="{worklistView>/sourceInput}"
 								autocomplete="false"
 								submit="onVlpla" class="sapUiTinyMarginEnd"/>
@@ -36,35 +71,37 @@
 							<Text  id="idUi5Guid" text="{Ui5Guid}" visible="false" class="sapUiTinyMarginEnd"/>
 						</items>
 					</HBox>
-					<HBox displayInline="false" justifyContent="Start" alignItems="Center" direction="Row" visible="{= ${worklistView>/scanMode} === 'M' &amp;&amp; !!${Vlpla} }" class="sapUiTinyMarginBegin sapUiTinyMarginBottom">
+					<HBox displayInline="false" justifyContent="Start" alignItems="Center" direction="Row" visible="{= ( ${worklistView>/scanMode} === 'M' || ${TidyActive} ) &amp;&amp; !!${Vlpla} }" class="sapUiTinyMarginBegin sapUiTinyMarginBottom">
 						<items>
-							<Label  text="Źródłowe MS:" class="sapUiTinyMarginEnd"/>
+							<Label  text="{= ${TidyActive} ? 'Porządkowane MS:' : 'Źródłowe MS:' }" class="sapUiTinyMarginEnd"/>
 							<ObjectStatus text="{Vlpla}" state="Information" inverted="true"/>
+							<Label  text="MS docelowe wg planu:" visible="{= ${TidyActive} &amp;&amp; !!${TidyTarget} }" class="sapUiTinyMarginBegin sapUiTinyMarginEnd"/>
+							<ObjectStatus text="{TidyTarget}" state="Success" inverted="true" visible="{= ${TidyActive} &amp;&amp; !!${TidyTarget} }"/>
 						</items>
 					</HBox>
-					<HBox displayInline="false" justifyContent="Start" alignItems="Start" direction="Row" visible="{= !!${Vlpla} &amp;&amp; !!!${Approved} &amp;&amp; !${worklistView>/selectionEnabled} &amp;&amp; ${worklistView>/scanMode} !== 'M' }" class="sapUiTinyMarginBegin">
+					<HBox displayInline="false" justifyContent="Start" alignItems="Start" direction="Row" visible="{= !${TidyActive} &amp;&amp; !!${Vlpla} &amp;&amp; !!!${Approved} &amp;&amp; !${worklistView>/selectionEnabled} &amp;&amp; ${worklistView>/scanMode} !== 'M' }" class="sapUiTinyMarginBegin">
 						<items>
 							<Label  text="Kod kreskowy/QR" class="sapUiTinyMarginEnd"/>
 							<Input id="idScanMatBatch" enabled="{= !!${Vlpla} &amp;&amp; !!!${Approved} &amp;&amp; !${worklistView>/selectionEnabled} &amp;&amp; ${worklistView>/scanMode} !== 'M' }"
 								value="{ path: 'ScanMatBatch', type: 'sap.ui.model.type.String' }" submit="onScanMatBatch" class="sapUiTinyMarginEnd"/>
 							<!--<Button id="stock-show" enabled="{= ${worklistView>/lineExist} &amp;&amp; !!!${Approved} }" text="Zapas" type="Emphasized" press="onShowStock"/>						-->
 						</items>
-					</HBox>	
+					</HBox>
 					<HBox displayInline="false" justifyContent="SpaceBetween" alignItems="Start" direction="Row" visible="true" class="sapUiTinyMarginBegin">
 						<items>
-							<Button id="move-button" text="Um.w mag." enabled="{= ${worklistView>/lineExist} &amp;&amp; !!!${Approved} &amp;&amp; !${worklistView>/hasQtyError} }" type="Emphasized" press="onMove" class="sapUiTinyMarginEnd"/>	
-							<Button id="move2-button" text="Um.w Aut." enabled="{= ${worklistView>/lineExist} &amp;&amp; !!!${Approved} &amp;&amp; !${worklistView>/hasQtyError} }" type="Emphasized" press="onMoveAuto" class="sapUiTinyMarginEnd"/>	
-							<Button id="move3-button" text="Przen.na M" enabled="{= ${worklistView>/lineExist} &amp;&amp; !!!${Approved} &amp;&amp; !${worklistView>/hasQtyError} }" type="Emphasized" press="onMoveM" class="sapUiTinyMarginEnd"/>	
+							<Button id="move-button" text="Um.w mag." visible="{= !${TidyActive} }" enabled="{= ${worklistView>/lineExist} &amp;&amp; !!!${Approved} &amp;&amp; !${worklistView>/hasQtyError} }" type="Emphasized" press="onMove" class="sapUiTinyMarginEnd"/>
+							<Button id="move2-button" text="Um.w Aut." visible="{= !${TidyActive} }" enabled="{= ${worklistView>/lineExist} &amp;&amp; !!!${Approved} &amp;&amp; !${worklistView>/hasQtyError} }" type="Emphasized" press="onMoveAuto" class="sapUiTinyMarginEnd"/>
+							<Button id="move3-button" text="Przen.na M" visible="{= !${TidyActive} }" enabled="{= ${worklistView>/lineExist} &amp;&amp; !!!${Approved} &amp;&amp; !${worklistView>/hasQtyError} }" type="Emphasized" press="onMoveM" class="sapUiTinyMarginEnd"/>
 							<Button text="Zapas" press="onBatchStock" type="Emphasized" class="sapUiTinyMarginBegin" />
 						</items>
-					</HBox>		
-					<HBox displayInline="false" justifyContent="Start" alignItems="Start" direction="Row" visible="true" class="sapUiTinyMarginBegin">
+					</HBox>
+					<HBox displayInline="false" justifyContent="Start" alignItems="Start" direction="Row" visible="{= !${TidyActive} }" class="sapUiTinyMarginBegin">
 						<items>
 							<Label  text="Docelowe MS" class="sapUiTinyMarginEndt"/>
-							<Input id="idNlpla" enabled="{= !!${Approved} &amp;&amp; !${worklistView>/hasQtyError} }" 
+							<Input id="idNlpla" enabled="{= !!${Approved} &amp;&amp; !${worklistView>/hasQtyError} }"
 								value="{ path: 'Nlpla', type: 'sap.ui.model.type.String' }" submit="onNlpla($event,'')" class="sapUiTinyMarginEnd"/>
 							<Text  id="idApproved" text="{Approved}" visible="false" class="sapUiTinyMarginEnd"/>
-						</items>					
+						</items>
 					</HBox>
 				</items>
 			</VBox>
@@ -117,16 +154,16 @@
 					</Column>
 					<Column width="auto" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" visible="{= ${worklistView>/selectionEnabled} &amp;&amp; !${worklistView>/hasHuItems} }">
 						<Text text="Ilość"/>
-					</Column>					
+					</Column>
 					<Column width="auto"  minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline">
 						<Text text="Status"/>
-					</Column>					
+					</Column>
 					<Column width="auto" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" visible="{= ${worklistView>/selectionEnabled} &amp;&amp; !${worklistView>/hasHuItems} &amp;&amp; ${worklistView>/hasClientColumn} }">
 						<Text text="Klient"/>
-					</Column>					
+					</Column>
 					<Column width="auto" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" visible="{= ${worklistView>/selectionEnabled} &amp;&amp; !${worklistView>/hasHuItems} &amp;&amp; ${worklistView>/hasSchemeColumn} }">
 						<Text text="Schemat Długość[mm]"/>
-					</Column>					
+					</Column>
 				</columns>
 
 				<items>
@@ -177,8 +214,8 @@
 									<ObjectStatus text="{CatSt}" state="Warning" visible="{= ${CatSt} === 'F2' }" class="sapUiTinyMarginBegin"/>
 								</items>
 							</HBox>
-						<Text text="{DestLocDescAddr}" visible="{= !!${DestLocDescAddr} }"/>							
-						<Text text="{CutScheme} {CutCl}" visible="{= !!${CutScheme} || !!${CutCl} }"/>							
+						<Text text="{DestLocDescAddr}" visible="{= !!${DestLocDescAddr} }"/>
+						<Text text="{CutScheme} {CutCl}" visible="{= !!${CutScheme} || !!${CutCl} }"/>
 						</cells>
 					</ColumnListItem>
 				</items>

@@ -5,6 +5,7 @@ sap.ui.define([
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator",
     "sap/m/MessageBox",
+    "sap/m/MessageToast",
     "sap/ui/core/Fragment",
     "sap/m/Dialog",
     "sap/m/Label",
@@ -16,7 +17,7 @@ sap.ui.define([
     "sap/m/List",
     "sap/m/StandardListItem"
 ], function (BaseController, JSONModel, formatter, Filter, FilterOperator, 
-       MessageBox, Fragment, Dialog, Label, Input, Button, ButtonType, HBox, Text,
+       MessageBox, MessageToast, Fragment, Dialog, Label, Input, Button, ButtonType, HBox, Text,
        List, StandardListItem) {
     "use strict";
 
@@ -319,6 +320,11 @@ sap.ui.define([
                 },
                 success: function (oData, response) {
                     gStorageType = oData.StorageType;
+                    // tidy mode (plan from RF Przyjęcia): one scan field - batch code or target bin
+                    if (oData.TidyActive) {
+                        thisView._onTidyResponse(oData, sSourceInput);
+                        return;
+                    }
 					thisView.getModel("worklistView").setProperty("/selectionEnabled", oData.SelectionEnabled === true);
 					// the backend returns the bin found for the scan - a different value means a material/batch code was scanned
 					var bMatBatchScan = oData.MessageType !== "E" && !!oData.Vlpla &&
@@ -503,12 +509,23 @@ sap.ui.define([
                         } else {
                             Ui5Guid = thisView._createUUID();
                         }
+                        // started from RF Przyjęcia with a tidy plan: register the plan before binding the view
+                        var oTidy = thisView._getTidyStartupParams();
+                        if (oTidy && !thisView._bTidyStarted) {
+                            thisView._bTidyStarted = true;
+                            thisView._startTidy(Ui5Guid, oTidy);
+                            return;
+                        }
                         var sObjectPath = thisView.getModel().createKey("SB_MOVESet", {
                             Ui5Guid: Ui5Guid
                         });
                         thisView._bindView("/" + sObjectPath);
                         idNlpla = thisView.getView().byId("idNlpla");
-                        idNlpla.focus();
+                        if (oData.TidyActive) {
+                            thisView.getView().byId("idVlpla").focus();
+                        } else {
+                            idNlpla.focus();
+                        }
                         thisView.getModel().refresh();
                     },
                     error: function (oError) {
@@ -523,6 +540,170 @@ sap.ui.define([
 		 * @param {string} sObjectPath path to the object to be bound to the view.
 		 * @private
 		 */
+        /* =========================================================== */
+        /* tidy mode - plan from RF Przyjęcia (GR01), stage 2          */
+        /* =========================================================== */
+
+        _getTidyStartupParams: function () {
+            // GR01 navigates here with TorId, Productno, Vlpla (bin to tidy) and TidyPlan (MATNR:BIN;...)
+            var oComponentData = this.getOwnerComponent().getComponentData(),
+                oParams = oComponentData && oComponentData.startupParameters;
+            if (!oParams || !oParams.Vlpla || !oParams.TidyPlan) {
+                return null;
+            }
+            var fnFirst = function (vValue) {
+                return Array.isArray(vValue) ? vValue[0] : vValue;
+            };
+            return {
+                TorId: fnFirst(oParams.TorId) || "",
+                Productno: fnFirst(oParams.Productno) || "",
+                Vlpla: fnFirst(oParams.Vlpla) || "",
+                TidyPlan: fnFirst(oParams.TidyPlan) || ""
+            };
+        },
+        _startTidy: function (sUi5Guid, oTidy) {
+            var oViewModel = this.getModel("worklistView"),
+                sObjectPath = this.getModel().createKey("SB_MOVESet", { Ui5Guid: sUi5Guid });
+            oViewModel.setProperty("/busy", true);
+            this.getModel().callFunction("/SB_MOVE_tidy_init", {
+                method: "POST",
+                urlParameters: {
+                    Ui5Guid: sUi5Guid,
+                    TorId: oTidy.TorId,
+                    Productno: oTidy.Productno,
+                    Vlpla: oTidy.Vlpla,
+                    TidyPlan: oTidy.TidyPlan
+                },
+                success: function (oData) {
+                    oViewModel.setProperty("/busy", false);
+                    thisView._bindView("/" + sObjectPath);
+                    if (oData.MessageType === "E") {
+                        MessageBox.error(oData.Message, { title: "Porządkowanie MS" });
+                    } else if (oData.Message) {
+                        MessageToast.show(oData.Message);
+                    }
+                    thisView.getModel().refresh();
+                    thisView.getView().byId("idVlpla").focus();
+                },
+                error: function () {
+                    oViewModel.setProperty("/busy", false);
+                    thisView._bindView("/" + sObjectPath);
+                    thisView.getModel().refresh();
+                }
+            });
+        },
+        _onTidyResponse: function (oData, sScan) {
+            // backend answer in tidy mode: E = error, W = target bin differs from the plan (ask), I = progress / finished
+            var oViewModel = this.getModel("worklistView");
+            oViewModel.setProperty("/sourceInput", "");
+            oViewModel.setProperty("/scanMode", "");
+            if (oData.MessageType === "E") {
+                MessageBox.error(oData.Message, {
+                    title: "Porządkowanie MS",
+                    onClose: function () {
+                        idVlpla.focus();
+                    }
+                });
+                oSourceG.getModel().refresh();
+                return;
+            }
+            if (oData.MessageType === "W") {
+                MessageBox.confirm(oData.Message, {
+                    title: "MS inne niż w planie",
+                    onClose: function (sAction) {
+                        if (sAction === MessageBox.Action.OK) {
+                            thisView._tidyForceMove(oData, sScan);
+                        } else {
+                            idVlpla.focus();
+                        }
+                    }
+                });
+                return;
+            }
+            if (oData.TidyFinished) {
+                MessageBox.success(oData.Message || "Uporządkowano MS " + oData.Vlpla, {
+                    title: "Porządkowanie zakończone",
+                    onClose: function () {
+                        thisView._backToReceipt();
+                    }
+                });
+                return;
+            }
+            if (oData.Message) {
+                MessageToast.show(oData.Message);
+            }
+            oSourceG.getModel().refresh();
+            idVlpla.focus();
+        },
+        _tidyForceMove: function (oData, sScan) {
+            // user confirmed a target bin other than the plan - the backend informs the manager by e-mail
+            var oViewModel = this.getModel("worklistView");
+            oViewModel.setProperty("/busy", true);
+            oSourceG.getModel().callFunction("/SB_MOVE_to_nlpla", {
+                method: "POST",
+                urlParameters: {
+                    Ui5Guid: oData.Ui5Guid,
+                    Vlpla: oData.Vlpla,
+                    Nlpla: sScan,
+                    Approved: "",
+                    PrintDoor: "",
+                    HuCount: "",
+                    TidyForce: "X"
+                },
+                success: function (oResult) {
+                    oViewModel.setProperty("/busy", false);
+                    thisView._onTidyResponse(oResult, sScan);
+                },
+                error: function () {
+                    oViewModel.setProperty("/busy", false);
+                    oSourceG.getModel().resetChanges();
+                    idVlpla.focus();
+                }
+            });
+        },
+        onTidyCancel: function (oEvent) {
+            oSourceG = oEvent.getSource();
+            thisView = this;
+            var context = oSourceG.getBindingContext();
+            var data = context.getProperty(null, context);
+            MessageBox.confirm("Przerwać porządkowanie MS " + data.Vlpla + "? Kierownik dostanie e-mail.", {
+                title: "Przerwanie porządkowania",
+                onClose: function (sAction) {
+                    if (sAction !== MessageBox.Action.OK) {
+                        return;
+                    }
+                    oSourceG.getModel().callFunction("/SB_MOVE_tidy_cancel", {
+                        method: "POST",
+                        urlParameters: {
+                            Ui5Guid: data.Ui5Guid,
+                            Vlpla: "",
+                            ScanMatBatch: ""
+                        },
+                        success: function (oData) {
+                            MessageBox.information(oData.Message || "Porządkowanie przerwane", {
+                                onClose: function () {
+                                    thisView._backToReceipt();
+                                }
+                            });
+                        },
+                        error: function () {
+                            oSourceG.getModel().refresh();
+                        }
+                    });
+                }
+            });
+        },
+        _backToReceipt: function () {
+            // back to the app we came from (RF Przyjęcia keeps the transport in its hash); started directly - just refresh
+            var oCrossAppNav = sap.ushell && sap.ushell.Container && sap.ushell.Container.getService("CrossApplicationNavigation");
+            this.getModel("worklistView").setProperty("/sourceInput", "");
+            if (oCrossAppNav && !oCrossAppNav.isInitialNavigation()) {
+                oCrossAppNav.backToPreviousApp();
+            } else {
+                this.getModel().refresh();
+            }
+        },
+
         _bindView: function (sObjectPath) {
             // Set busy indicator during view binding
             var oViewModel = this.getModel("worklistView");
@@ -1119,6 +1300,13 @@ sap.ui.define([
             // don't steal focus from a row field (e.g. qty) being edited when the table refreshes
             var oActiveElement = document.activeElement;
             if (oTable.getDomRef() && oActiveElement && oTable.getDomRef().contains(oActiveElement)) {
+                return;
+            }
+
+            // tidy mode: the single scan field takes every scan (batch code or target bin)
+            var oHeader = this.getView().getBindingContext() && this.getView().getBindingContext().getObject();
+            if (oHeader && oHeader.TidyActive) {
+                this.byId("idVlpla").focus();
                 return;
             }
 

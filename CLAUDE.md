@@ -21,7 +21,7 @@ Tożsamość aplikacji:
 
 - **MV01 (`/home/user/projects/S4D_EWM_RF_SU_MV01`) wolno tylko czytać.** Żadnych zmian, commitów ani deployów. Wszystkie analizy, dokumenty i zmiany zapisujemy w MV03.
 - Nie zmieniamy `Z075EWM_SR_ODATA01_SRV`. Usługa obsługuje też GR01, GI01, LO01, ST03 i USR01.
-- Commity kończymy linią `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. Push dopiero po podaniu przez użytkownika URL nowego repo. Dziś repo nie ma remote, gałąź `main`.
+- Commity kończymy linią `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`. Remote `origin` = github.com/jerstr/S4D_EWM_RF_SU_MV03, gałąź `main`; deploy do S4D robi ekspert w BAS po pushu.
 - Teksty UI piszemy po polsku, komentarze w kodzie po angielsku. Styl kodu jak w istniejącym kontrolerze: zmienne globalne modułu (`oSourceG`, `thisView`, `gPrinter`…), `callFunction` + `MessageBox`.
 
 ## Dokumenty
@@ -55,13 +55,16 @@ Tożsamość aplikacji:
 - **Kolumny „Klient” i „Schemat”** są ukryte, gdy żadna pozycja nie ma danych.
 - **`webapp/localService/metadata.xml`** = `$metadata` usługi `ZUI_S4M_EWM_MV03_O2` pobrane 05.11.2026 z S4D/100. Odświeżanie: `curl "http://S4D_100.dest/sap/opu/odata/sap/ZUI_S4M_EWM_MV03_O2/\$metadata?sap-client=100"`. W BAS destinations są dostępne jako `http://<nazwa>.dest`.
 
+## Etap 2 – porządkowanie MS (05.11.2026)
+
+Opis procesu, usługi i obiektów: **[docs/MV03-etap2-porzadkowanie.md](docs/MV03-etap2-porzadkowanie.md)**. W skrócie: GR01 przy propozycji TIDY nawiguje do `#ZS4MORIS_EWM_COCKPIT-RF_MOVE03` z `TorId`, `Productno`, `Vlpla`, `TidyPlan`; MV03 zakłada plan (`SB_MOVE_tidy_init`), pokazuje panel „Do zrobienia” (`to_SB_MOVE_Tidy`) i obsługuje jedno pole skanowania (partia albo MS docelowe). `MessageType W` = pytanie o MS inne niż plan (`TidyForce = X`), `TidyFinished` = automatyczny powrót do GR01 (`backToPreviousApp`). Przycisk „Przerwij” = `SB_MOVE_tidy_cancel` + mail do kierownika.
+
 ## Otwarte sprawy
 
-1. URL nowego repo GitHub: dodać remote i zrobić push.
-2. Kafelek i target mapping w FLP dla `Z075EWM_RF_MV03`.
-3. Test w UI na S4D wywołań księgujących (`SB_MOVE_to_nlpla`: MS docelowe, `AUTOMAT`, `MOVE_M`), bo backend ich nie testował automatycznie.
-4. Struktura tabeli strategii w S4 i jej rozszerzenie w usłudze RAP.
-5. Przepływ „Uporządkuj”: lista zadań, potwierdzenie MS źródłowego, skan partii, ilość, MS docelowe. Do wycięcia prawdopodobnie Um.w Aut., Przen.na M, okno wyboru pozycji i logika N04/M06, do potwierdzenia.
+1. Target mapping `RF_MOVE03` w FLP musi przepuszczać parametry `TorId`, `Productno`, `Vlpla`, `TidyPlan`.
+2. Test na skanerze: TIDY w GR01 → MV03 → przesunięcia → powrót → rozmieszczenie (backend nie testuje księgowania automatycznie).
+3. `localService/metadata.xml` odświeżyć z `$metadata` (nowe pola `Tidy*`, zbiór `SB_MOVE_TidySet`).
+4. Obiekt autoryzacji dla MV03 (jak MV01 – brak).
 
 ## Uruchamianie
 
