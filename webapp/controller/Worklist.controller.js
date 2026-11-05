@@ -673,15 +673,25 @@ sap.ui.define([
         onTidyCancel: function (oEvent) {
             oSourceG = oEvent.getSource();
             thisView = this;
-            var context = oSourceG.getBindingContext();
-            var data = context.getProperty(null, context);
+            this._tidyCancelConfirm();
+        },
+        // Przerwij: z przycisku albo ze strzałki "wstecz" launchpadu (ShellUIService.setBackNavigation)
+        _tidyCancelConfirm: function () {
+            var oContext = this.getView().getBindingContext(),
+                data = oContext ? oContext.getObject() : null,
+                oModel = this.getModel();
+            thisView = this;
+            if (!data || !data.TidyActive || data.TidyFinished) {
+                this._backToReceipt();
+                return;
+            }
             MessageBox.confirm("Przerwać porządkowanie MS " + data.Vlpla + "? Kierownik dostanie e-mail.", {
                 title: "Przerwanie porządkowania",
                 onClose: function (sAction) {
                     if (sAction !== MessageBox.Action.OK) {
                         return;
                     }
-                    oSourceG.getModel().callFunction("/SB_MOVE_tidy_cancel", {
+                    oModel.callFunction("/SB_MOVE_tidy_cancel", {
                         method: "POST",
                         urlParameters: {
                             Ui5Guid: data.Ui5Guid,
@@ -696,14 +706,34 @@ sap.ui.define([
                             });
                         },
                         error: function () {
-                            oSourceG.getModel().refresh();
+                            oModel.refresh();
                         }
                     });
                 }
             });
         },
+        // Strzałka "wstecz" w pasku launchpadu: w trakcie porządkowania = Przerwij, poza nim = standard FLP
+        _setTidyBack: function (bActive) {
+            if (this._bTidyBack === bActive) {
+                return;
+            }
+            this._bTidyBack = bActive;
+            thisView = this;
+            var oComponent = this.getOwnerComponent();
+            if (!oComponent || typeof oComponent.getService !== "function") {
+                return;
+            }
+            oComponent.getService("ShellUIService").then(function (oService) {
+                oService.setBackNavigation(bActive ? function () {
+                    thisView._tidyCancelConfirm();
+                } : undefined);
+            }).catch(function () {
+                // poza launchpadem (podgląd lokalny) usługi nie ma
+            });
+        },
         _backToReceipt: function () {
             // back to the app we came from (RF Przyjęcia keeps the transport in its hash); started directly - just refresh
+            this._setTidyBack(false);
             var oCrossAppNav = sap.ushell && sap.ushell.Container && sap.ushell.Container.getService("CrossApplicationNavigation");
             this.getModel("worklistView").setProperty("/sourceInput", "");
             if (oCrossAppNav && !oCrossAppNav.isInitialNavigation()) {
@@ -1290,6 +1320,11 @@ sap.ui.define([
                 sTitle = this.getResourceBundle().getText("worklistTableTitle");
             }
             this.getModel("worklistView").setProperty("/worklistTableTitle", sTitle);
+
+            // tryb porządkowania: strzałka "wstecz" launchpadu działa jak Przerwij (pytanie, mail, powrót do GR01)
+            var oHeaderCtx = this.getView().getBindingContext(),
+                oHeader = oHeaderCtx ? oHeaderCtx.getObject() : null;
+            this._setTidyBack(!!(oHeader && oHeader.TidyActive && !oHeader.TidyFinished));
 
             // hide "Klient" / "Schemat Długość[mm]" columns when none of the rows carry data
             var aRowData = oTable.getBinding("items") ? oTable.getBinding("items").getContexts().map(function (oContext) {
