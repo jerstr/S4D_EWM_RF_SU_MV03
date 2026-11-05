@@ -32,7 +32,7 @@
 									<HBox alignItems="Center">
 										<items>
 											<!-- podgląd zapasu to tylko pomoc: ikona w pasku zamiast przycisku pod polem skanowania -->
-											<Button id="tidy-stock" icon="sap-icon://inventory" tooltip="Zapas" press="onBatchStock" class="sapUiTinyMarginEnd"/>
+											<Button id="tidy-stock" text="Zapas" type="Emphasized" press="onBatchStock" class="sapUiTinyMarginEnd"/>
 											<Button id="tidy-cancel" text="Przerwij" type="Reject" icon="sap-icon://decline" press="onTidyCancel" enabled="{= !${TidyFinished} }"/>
 										</items>
 									</HBox>
