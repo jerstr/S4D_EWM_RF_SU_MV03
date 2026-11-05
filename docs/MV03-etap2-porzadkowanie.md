@@ -12,7 +12,7 @@ Stan na 05.11.2026. S4D, klient 100. Backend MV03 w transporcie **S4DK929808**, 
    - porządkowane MS → tylko potwierdzenie, nic się nie dzieje.
 4. Kolejność indeksów dowolna, ale **jeden indeks na cykl**: skan partii innego indeksu przed potwierdzeniem MS = komunikat „Najpierw potwierdź MS docelowe dla …”.
 5. **MS inne niż w planie**: backend zwraca `MessageType = W`, UI pyta „Przesunąć? Kierownik dostanie e-mail”. Po OK wywołanie `SB_MOVE_to_nlpla` z `TidyForce = X`; faktyczne MS zapisane w planie, mail na listę `ZS4M_EWM_STR_RF_DLIST` (Z075EWM_CFG).
-6. Gdy na MS nie ma już zapasu indeksów z planu: plan zamknięty (status C), komunikat „Uporządkowano MS … Powrót do RF Przyjęcia” i **automatyczny powrót** do GR01 (`backToPreviousApp`, GR01 wraca na ten sam transport). Okno rozmieszczenia liczy się od nowa, MS wychodzi jako „ten sam indeks”/„puste”.
+6. Gdy na MS nie ma już zapasu indeksów z planu: plan zamknięty (status C), komunikat „Uporządkowano MS … Powrót do RF Przyjęcia” i **automatyczny powrót** do GR01 (`backToPreviousApp`, GR01 wraca na ten sam transport). Okno rozmieszczenia liczy się od nowa, MS wychodzi jako „ten sam indeks”/„puste”. Zadanie magazynowe z natychmiastowym potwierdzeniem księguje zapas dopiero przy `COMMIT WORK`, dlatego `tidy_after_move` najpierw zatwierdza LUW (`COMMIT WORK AND WAIT` + `/scwm/cl_tm=>cleanup`), a dopiero potem liczy, co zostało na MS (poprawka po teście na skanerze 05.11.2026 – bez niej plan nigdy się nie domykał). Dodatkowo każda akcja (`execute`) domyka plan przez `tidy_close`, gdy na MS nie ma już nic z planu (np. zapas przesunięty poza MV03 albo plan otwarty przed poprawką); UI obsługuje `TidyFinished` także w odpowiedzi na `SB_MOVE_tidy_init`.
 7. **Przerwij** (przycisk w panelu): potwierdzenie, `SB_MOVE_tidy_cancel` → plan status X, mail do kierownika, powrót do GR01.
 8. Plan starszy niż 4 h jest ignorowany (status T). Ponowne wejście z GR01 na to samo MS i auto zastępuje plan bez maila; inne MS/auto = stary plan porzucony z mailem.
 
@@ -34,7 +34,7 @@ Komunikaty: `MessageType` `E` = błąd, `W` = pytanie (MS inne niż plan), `I` =
 
 - tabela `ZS4M_EWM_MV03_T` (plan: `task_id` + `matnr`, `tor_id`, `productno`, `vlpla`, `target_lgpla`, `actual_lgpla`, `qty_init`, `status` O/C/X/T);
 - struktura `ZS4M_EWM_MV03_S_HDR` = `Z075EWM_SR_ODATA_SB_MOVE` + pola `tidy_*` (struktura MV01 bez zmian);
-- `ZCL_S4M_EWM_MV03_MOVE`: metody `get_tidy_task`, `get_tidy_items`, `tidy_parse_plan`, `tidy_fill_header`, `tidy_after_move`, `tidy_mail`, akcje `act_sb_move_tidy_init/_cancel`; gałęzie trybu porządkowania w `set_vlpla`, `set_mat_batch`, `to_nlpla`, `init`, `execute`;
+- `ZCL_S4M_EWM_MV03_MOVE`: metody `get_tidy_task`, `get_tidy_items`, `tidy_parse_plan`, `tidy_fill_header`, `tidy_after_move`, `tidy_close`, `tidy_mail`, akcje `act_sb_move_tidy_init/_cancel`; gałęzie trybu porządkowania w `set_vlpla`, `set_mat_batch`, `to_nlpla`, `init`, `execute`;
 - CDS `ZR_S4M_EWM_MV03T`, encja abstrakcyjna `ZA_S4M_EWM_MV03_TIDY`, pola w `ZR_S4M_EWM_MV03H`, BDEF, `ZBP_R_S4M_EWM_MV03H` (`lhc_sb_move_tidy`), `ZCL_S4M_EWM_MV03_QUERY` (`map_tidy`), SRVD, SRVB opublikowany ponownie.
 
 RF Przyjęcia (pakiet Z075EWM_SR_UI, S4DK929802): pola `Level` i `TidyPlan` w `Z075EWM_SR_ODATA_PUTAWAY` + `MPC_EXT->DEFINE`, wypełniane w `DPC_EXT->PUTAWAY_NEW_STRATEGY`. Po imporcie/aktywacji odświeżyć cache metadanych usługi `Z075EWM_SR_ODATA01_SRV` (`/IWFND/CACHE_CLEANUP`), inaczej UI nie zobaczy nowych pól.
@@ -43,7 +43,8 @@ RF Przyjęcia (pakiet Z075EWM_SR_UI, S4DK929802): pola `Level` i `TidyPlan` w `Z
 
 - ABAP Unit `ZBP_R_S4M_EWM_MV03H`: 13/13 OK (S4D, 05.11.2026), w tym `LTC_TIDY` (plan i lista, reguły skanowania, MS docelowe, Reset/Init z planem). Klasy DANGEROUS – uruchamiać świadomie, piszą w tabelach sesji i planu użytkownika testu.
 - Gateway Client grupa `ZS4M_MV03`: przypadki 16–22 (porządkowanie). Odtworzyć grupę: `ZCL_S4M_EWM_MV03_GWC` F9 w ADT. **Przypadek 22 (przerwanie) wysyła mail** na listę `ZS4M_EWM_STR_RF_DLIST`.
-- Nietestowane automatycznie (księgują): przesunięcie w trybie porządkowania, zamknięcie planu, mail przy MS innym niż plan, powrót do GR01. Test na skanerze: TIDY w GR01 → MV03 → skan partii → skan MS docelowego → … → powrót → rozmieszczenie.
+- Test na skanerze 05.11.2026 (MS N9-R1-035, 2 indeksy): przejście z GR01, skany i oba przesunięcia OK; koniec planu nie był zgłaszany – poprawione (patrz Proces pkt 6), po poprawce LTC_READ + LTC_TIDY 7/7 OK.
+- Nietestowane automatycznie (księgują): zamknięcie planu po ostatnim przesunięciu (do powtórzenia na skanerze po deployu), mail przy MS innym niż plan, powrót do GR01.
 
 ## UI (ten projekt)
 

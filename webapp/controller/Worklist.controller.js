@@ -579,6 +579,15 @@ sap.ui.define([
                     thisView._bindView("/" + sObjectPath);
                     if (oData.MessageType === "E") {
                         MessageBox.error(oData.Message, { title: "Porządkowanie MS" });
+                    } else if (oData.TidyFinished) {
+                        // nothing from the plan is left on the bin (e.g. moved meanwhile) - report and go back
+                        MessageBox.success(oData.Message || "Uporządkowano MS " + oData.Vlpla, {
+                            title: "Porządkowanie zakończone",
+                            onClose: function () {
+                                thisView._backToReceipt();
+                            }
+                        });
+                        return;
                     } else if (oData.Message) {
                         MessageToast.show(oData.Message);
                     }
