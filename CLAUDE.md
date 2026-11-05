@@ -21,7 +21,7 @@ Tożsamość aplikacji:
 
 - **MV01 (`/home/user/projects/S4D_EWM_RF_SU_MV01`) wolno tylko czytać.** Żadnych zmian, commitów ani deployów. Wszystkie analizy, dokumenty i zmiany zapisujemy w MV03.
 - Nie zmieniamy `Z075EWM_SR_ODATA01_SRV`. Usługa obsługuje też GR01, GI01, LO01, ST03 i USR01.
-- Commity kończymy linią `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`. Remote `origin` = github.com/jerstr/S4D_EWM_RF_SU_MV03, gałąź `main`; deploy do S4D robi ekspert w BAS po pushu.
+- Commity kończymy linią `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`. Remote `origin` = github.com/jerstr/S4D_EWM_RF_SU_MV03, gałąź `main`; deploy do S4D robi ekspert: w BAS po pushu albo lokalnie skryptem `.\deploy-local.ps1` (pyta o hasło, bez `.env`; mandant i transport z `ui5-deploy.yaml`).
 - Teksty UI piszemy po polsku, komentarze w kodzie po angielsku. Styl kodu jak w istniejącym kontrolerze: zmienne globalne modułu (`oSourceG`, `thisView`, `gPrinter`…), `callFunction` + `MessageBox`.
 
 ## Dokumenty
@@ -71,3 +71,4 @@ Opis procesu, usługi i obiektów: **[docs/MV03-etap2-porzadkowanie.md](docs/MV0
 - `npm start` – FLP sandbox, backend przez destination `S4D_100`.
 - `npm run start-mock` – mockserver na metadata nowej usługi.
 - Deploy: `npm run build`, potem `npx fiori deploy --config ui5-deploy.yaml -y` (`npm run deploy` pyta interaktywnie o potwierdzenie).
+- Deploy lokalny (ten komputer): `.\deploy-local.ps1` we własnym terminalu; `-TestMode` = próba bez zapisu. `ui5-deploy.yaml` ma `url: https://app-dev.moris.pl:44305` (lokalnie) i `destination: S4D_100` (BAS). `package-lock.json` odbudowany 05.11.2026 z publicznego npm, bo lock z BAS wskazywał wewnętrzne repozytorium BAS (`cluster.local`) i `npm ci` poza BAS nie działał. Zasada przy pracy w obu miejscach: w BAS `npm ci` (nie `npm install`) i nie commitować zmian `package-lock.json` zrobionych w BAS.

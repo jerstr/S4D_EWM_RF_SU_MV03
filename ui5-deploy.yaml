@@ -16,7 +16,7 @@ builder:
         target:
           destination: S4D_100
           client: "100"
-          url: http://app-dev.moris.pl:44305
+          url: https://app-dev.moris.pl:44305
         app:
           name: Z075EWM_RF_MV03
           description: Z075EWM_RF_MV03 - Uporządkuj RF
