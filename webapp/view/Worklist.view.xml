@@ -27,11 +27,13 @@
 						<items>
 							<HBox alignItems="Center" justifyContent="SpaceBetween" wrap="Wrap">
 								<items>
-									<ObjectStatus text="{TidyText}" state="Information" inverted="true" icon="sap-icon://move" class="sapUiTinyMarginEnd"/>
+									<!-- mały ekran (Zebra): krótki licznik w pasku, opis planu w osobnej zawijanej linii -->
+									<ObjectStatus text="{= ${TidyDone} + '/' + (${TidyDone} + ${TidyOpen}) + ' gotowe' }" state="Information" inverted="true" icon="sap-icon://move" class="sapUiTinyMarginEnd"/>
 									<Button id="tidy-cancel" text="Przerwij" type="Reject" icon="sap-icon://decline" press="onTidyCancel" enabled="{= !${TidyFinished} }"/>
 								</items>
 							</HBox>
-							<List id="tidyList" items="{to_SB_MOVE_Tidy}" headerText="{= 'Do zrobienia - wyjąć z MS ' + ${Vlpla} }" class="sapUiTinyMarginTop">
+							<Text text="{TidyText}" wrapping="true" class="sapUiTinyMarginTop"/>
+							<List id="tidyList" items="{to_SB_MOVE_Tidy}" headerText="Do zrobienia" class="sapUiTinyMarginTop">
 								<items>
 									<CustomListItem type="Inactive" highlight="{= ${IsCurrent} ? 'Information' : 'None' }">
 										<HBox alignItems="Center" justifyContent="SpaceBetween" class="sapUiTinyMargin">
