@@ -32,7 +32,7 @@
 									<HBox alignItems="Center">
 										<items>
 											<!-- podgląd zapasu to tylko pomoc: ikona w pasku zamiast przycisku pod polem skanowania -->
-											<Button id="tidy-stock" icon="sap-icon://warehouse" tooltip="Zapas" press="onBatchStock" class="sapUiTinyMarginEnd"/>
+											<Button id="tidy-stock" icon="sap-icon://inventory" tooltip="Zapas" press="onBatchStock" class="sapUiTinyMarginEnd"/>
 											<Button id="tidy-cancel" text="Przerwij" type="Reject" icon="sap-icon://decline" press="onTidyCancel" enabled="{= !${TidyFinished} }"/>
 										</items>
 									</HBox>
@@ -67,7 +67,7 @@
 					</VBox>
 					<HBox displayInline="false" justifyContent="Start" alignItems="Start" direction="Row" visible="true" class="sapUiTinyMarginBegin">
 						<items>
-							<Label  text="{= ${TidyActive} ? 'Skanuj partię z MS lub MS docelowe' : 'Źródłowe MS lub Kod kreskowy/QR' }" class="sapUiTinyMarginEndt"/>
+							<Label  text="{= ${TidyActive} ? 'Partia lub MS docelowe:' : 'Źródłowe MS lub Kod kreskowy/QR' }" class="sapUiTinyMarginEndt"/>
 							<!-- <Input id="idVlpla" enabled="{= !!!${Vlpla} }"
 								value="{ path: 'Vlpla', type: 'sap.ui.model.type.String' }"
 								submit="onVlpla" class="sapUiTinyMarginEnd"/> -->
@@ -79,7 +79,8 @@
 							<Text  id="idUi5Guid" text="{Ui5Guid}" visible="false" class="sapUiTinyMarginEnd"/>
 						</items>
 					</HBox>
-					<HBox displayInline="false" justifyContent="Start" alignItems="Center" direction="Row" visible="{= ( ${worklistView>/scanMode} === 'M' || ${TidyActive} ) &amp;&amp; !!${Vlpla} }" class="sapUiTinyMarginBegin sapUiTinyMarginBottom">
+					<!-- wrap: na wąskim ekranie "MS docelowe wg planu" schodzi do drugiej linii zamiast ściskać kody MS -->
+					<HBox displayInline="false" justifyContent="Start" alignItems="Center" direction="Row" wrap="Wrap" visible="{= ( ${worklistView>/scanMode} === 'M' || ${TidyActive} ) &amp;&amp; !!${Vlpla} }" class="sapUiTinyMarginBegin sapUiTinyMarginBottom">
 						<items>
 							<Label  text="{= ${TidyActive} ? 'Porządkowane MS:' : 'Źródłowe MS:' }" class="sapUiTinyMarginEnd"/>
 							<ObjectStatus text="{Vlpla}" state="Information" inverted="true"/>
@@ -158,19 +159,19 @@
 					<Column id="nameColumn">
 						<Text text="{i18n>tableNameColumnTitle}" id="nameColumnTitle" visible="{= !${TidyActive} }"/>
 					</Column>
-					<Column width="auto" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline">
+					<Column width="auto" minScreenWidth="Tablet" demandPopin="true" popinDisplay="{= ${TidyActive} ? 'WithoutHeader' : 'Inline' }">
 						<Text text="Opis  Ilość JM" id="unitNumberColumnTitle" visible="{= !${TidyActive} }"/>
 					</Column>
-					<Column width="auto" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" visible="{= ${worklistView>/selectionEnabled} &amp;&amp; !${worklistView>/hasHuItems} }">
+					<Column width="auto" minScreenWidth="Tablet" demandPopin="true" popinDisplay="{= ${TidyActive} ? 'WithoutHeader' : 'Inline' }" visible="{= ${worklistView>/selectionEnabled} &amp;&amp; !${worklistView>/hasHuItems} }">
 						<Text text="Ilość" visible="{= !${TidyActive} }"/>
 					</Column>
-					<Column width="auto"  minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline">
+					<Column width="auto"  minScreenWidth="Tablet" demandPopin="true" popinDisplay="{= ${TidyActive} ? 'WithoutHeader' : 'Inline' }">
 						<Text text="Status" visible="{= !${TidyActive} }"/>
 					</Column>
-					<Column width="auto" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" visible="{= ${worklistView>/selectionEnabled} &amp;&amp; !${worklistView>/hasHuItems} &amp;&amp; ${worklistView>/hasClientColumn} }">
+					<Column width="auto" minScreenWidth="Tablet" demandPopin="true" popinDisplay="{= ${TidyActive} ? 'WithoutHeader' : 'Inline' }" visible="{= ${worklistView>/selectionEnabled} &amp;&amp; !${worklistView>/hasHuItems} &amp;&amp; ${worklistView>/hasClientColumn} }">
 						<Text text="Klient" visible="{= !${TidyActive} }"/>
 					</Column>
-					<Column width="auto" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" visible="{= ${worklistView>/selectionEnabled} &amp;&amp; !${worklistView>/hasHuItems} &amp;&amp; ${worklistView>/hasSchemeColumn} }">
+					<Column width="auto" minScreenWidth="Tablet" demandPopin="true" popinDisplay="{= ${TidyActive} ? 'WithoutHeader' : 'Inline' }" visible="{= ${worklistView>/selectionEnabled} &amp;&amp; !${worklistView>/hasHuItems} &amp;&amp; ${worklistView>/hasSchemeColumn} }">
 						<Text text="Schemat Długość[mm]" visible="{= !${TidyActive} }"/>
 					</Column>
 				</columns>
